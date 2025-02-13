@@ -3,6 +3,9 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+build-MinGW-W64.bat
+build-VisualStudio2022.bat
+
 # User-specific files
 *.rsuser
 *.suo
