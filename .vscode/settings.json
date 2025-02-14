@@ -10,6 +10,7 @@
   },
   "files.associations": {
     "__node_handle": "c",
-    "resource_dir.h": "c"
+    "resource_dir.h": "c",
+    "stdlib.h": "c"
   }
 }

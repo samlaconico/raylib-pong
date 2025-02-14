@@ -4,11 +4,13 @@
 #include "raymath.h"
 #include <stdio.h>
 #include "stdlib.h"
+#include "sound.h"
 
 enum STATE
 {
     GAME,
-    TITLE
+    TITLE,
+    PAUSE
 };
 
 static Wall wall[2] = {0};
@@ -26,8 +28,14 @@ enum STATE state = TITLE;
 int turn = 0;
 float hue;
 
-void InitGame()
+bool *exitGame;
+
+void InitGame(bool *e)
 {
+    audioInit();
+
+    exitGame = e;
+
     // initialize top and bottom walls
     wall[0].size = (Vector2){GAME_WIDTH, 30};
     wall[1].size = (Vector2){GAME_WIDTH, 30};
@@ -123,6 +131,11 @@ void UpdateGame()
             Reset();
         }
 
+        if (IsKeyPressed(KEY_P))
+        {
+            state = PAUSE;
+        }
+
         if (IsKeyPressed(KEY_SPACE) && ball.velocity.x == 0 && ball.velocity.y == 0)
         {
             start = true;
@@ -153,6 +166,7 @@ void UpdateGame()
         // ball collision with walls
         if (ball.position.y + ball.velocity.y <= wall[0].position.y + wall[0].size.y || ball.position.y + ball.size.y + ball.velocity.y >= wall[1].position.y)
         {
+
             if (ball.position.y > GAME_HEIGHT / 2)
             {
                 wall[1].color = ball.color;
@@ -165,6 +179,8 @@ void UpdateGame()
             }
 
             ball.velocity.y *= -1;
+
+            playRandomSound();
         }
 
         // ball collision with left paddle
@@ -173,6 +189,8 @@ void UpdateGame()
             ball.velocity.x = GetRandomValue(5, 8);
             ball.velocity.y = -Clamp((paddleLeft.position.y + (paddleLeft.size.y / 2)) - (ball.position.y), -5, 5);
             ball.color = colorArray[GetRandomValue(0, 2)];
+
+            playRandomSound();
         }
 
         // ball collision with right paddle
@@ -181,6 +199,8 @@ void UpdateGame()
             ball.velocity.x = GetRandomValue(5, 8) * -1;
             ball.velocity.y = -Clamp((paddleRight.position.y + (paddleRight.size.y / 2)) - (ball.position.y), -5, 5);
             ball.color = colorArray[GetRandomValue(0, 2)];
+
+            playRandomSound();
         }
 
         // ball out of bounds
@@ -196,12 +216,26 @@ void UpdateGame()
                 score[0] += 1;
                 turn = 1;
             }
+            playLosingSound();
             Reset();
         }
 
         // update ball position
         ball.position.x += ball.velocity.x;
         ball.position.y += ball.velocity.y;
+        break;
+
+    case PAUSE:
+
+        if (IsKeyPressed(KEY_P))
+        {
+            state = GAME;
+        }
+
+        if (IsKeyPressed(KEY_Q))
+        {
+            *exitGame = true;
+        }
         break;
 
     case TITLE:
@@ -213,7 +247,13 @@ void UpdateGame()
 
         if (IsKeyDown(KEY_SPACE))
         {
+            playStartSound();
             state = GAME;
+        }
+
+        if (IsKeyPressed(KEY_Q))
+        {
+            *exitGame = true;
         }
 
         break;
@@ -243,15 +283,33 @@ void DrawGame()
         if (!start)
         {
             DrawTextPro(GetFontDefault(), "PRESS SPACE TO PLAY", (Vector2){(GAME_WIDTH / 2) - (MeasureText("PRESS SPACE TO PLAY", 40) / 2) - 10, GAME_HEIGHT / 3}, (Vector2){0, 0}, sin(GetTime()) * 3, 40, 5, WHITE);
+            DrawTextPro(GetFontDefault(), "ARROW KEYS TO MOVE AND CHANGE COLOR", (Vector2){(GAME_WIDTH / 2) - (MeasureText("ARROW KEYS TO MOVE AND CHANGE COLOR", 40) / 2) - 10, GAME_HEIGHT / 2}, (Vector2){0, 0}, sin(GetTime()) * 3, 40, 5, WHITE);
         }
 
         // DrawLine(GAME_WIDTH / 2, 0, (GAME_WIDTH / 2) + 1, GAME_HEIGHT, RED);
         break;
+    case PAUSE:
+        for (int i = 0; i < sizeof(wall) / sizeof(wall[1]); i++)
+        {
+            DrawRectangle(wall[i].position.x, wall[i].position.y, wall[i].size.x, wall[i].size.y, wall[i].color);
+        }
 
+        DrawRectangle(paddleLeft.position.x, paddleLeft.position.y, paddleLeft.size.x, paddleLeft.size.y, paddleLeft.color);
+        DrawRectangle(paddleRight.position.x, paddleRight.position.y, paddleRight.size.x, paddleRight.size.y, paddleRight.color);
+
+        DrawText(TextFormat("%d", score[0]), (GAME_WIDTH / 2) - 100, 100, 100, WHITE);
+        DrawText(TextFormat("%d", score[1]), (GAME_WIDTH / 2) + 50, 100, 100, WHITE);
+
+        DrawText("PAUSED", ((GAME_WIDTH / 2) - (MeasureText("PAUSED", 50) / 2)), (GAME_HEIGHT / 2) - 75, 50, WHITE);
+        DrawText("PRESS Q TO QUIT", (GAME_WIDTH / 2) - (MeasureText("PRESS Q TO QUIT", 50) / 2), (GAME_HEIGHT / 2) + 25, 50, WHITE);
+
+        // DrawLine(GAME_WIDTH / 2, 0, (GAME_WIDTH / 2) + 1, GAME_HEIGHT, RED);
+        break;
     case TITLE:
         DrawRectangleGradientH(0, 0, GAME_WIDTH, GAME_HEIGHT, ColorFromHSV(hue, 1, 1), ColorFromHSV(hue + 330, 1, 1));
         DrawTextPro(GetFontDefault(), "NEW PONG", (Vector2){(GAME_WIDTH / 2), 325}, (Vector2){MeasureText("NEWPONG", 100) / 2, 0}, sin(GetTime()) * 3, 100, 5, WHITE);
-        DrawTextPro(GetFontDefault(), "Press Space", (Vector2){(GAME_WIDTH / 2) - (MeasureText("Press Space", 50) / 2), 425}, (Vector2){0, 0}, 0, 50, 5, WHITE);
+        DrawTextPro(GetFontDefault(), "Press Space To Play", (Vector2){(GAME_WIDTH / 2) - (MeasureText("Press Space To Play", 50) / 2), 425}, (Vector2){0, 0}, 0, 50, 5, WHITE);
+        DrawTextPro(GetFontDefault(), "Press Q To Quit", (Vector2){(GAME_WIDTH / 2) - (MeasureText("Press Q To Quit", 50) / 2), 475}, (Vector2){0, 0}, 0, 50, 5, WHITE);
         break;
     }
 }

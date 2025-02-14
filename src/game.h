@@ -29,6 +29,7 @@ typedef struct Wall
 } Wall;
 
 void InitGame();
+void movePaddle();
 void Reset();
 void UpdateGame();
 void DrawGame();

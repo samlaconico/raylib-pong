@@ -2,22 +2,31 @@
 #include "resource_dir.h"
 #include "game.h"
 #include "global.h"
+#include "sound.h"
 
 int main()
 {
 	SetConfigFlags(FLAG_VSYNC_HINT | FLAG_WINDOW_HIGHDPI);
 	SetTargetFPS(60);
+
 	InitWindow(GAME_WIDTH, GAME_HEIGHT, "New PONG");
+	InitAudioDevice();
+
+	bool *exitGame = false;
 	SearchAndSetResourceDir("resources");
 
 	Shader shader = LoadShader(0, "fisheye.fs");
 	RenderTexture2D target = LoadRenderTexture(GAME_WIDTH, GAME_HEIGHT);
 	SetTextureFilter(target.texture, TEXTURE_FILTER_ANISOTROPIC_16X);
 
-	InitGame();
+	SetExitKey(KEY_NULL);
+	InitGame(&exitGame);
 
-	while (!WindowShouldClose())
+	while (!exitGame)
 	{
+		if (WindowShouldClose())
+			exitGame = true;
+
 		UpdateGame();
 
 		BeginTextureMode(target);
@@ -33,6 +42,7 @@ int main()
 		EndDrawing();
 	}
 
+	unloadAudio();
 	UnloadRenderTexture(target);
 
 	CloseWindow();
