@@ -28,7 +28,7 @@ typedef struct Wall
     Color color;
 } Wall;
 
-void InitGame();
+void InitGame(bool *e);
 void movePaddle();
 void Reset();
 void UpdateGame();

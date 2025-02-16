@@ -14,11 +14,13 @@ void audioInit()
 
     losingSound = LoadSound("lose.wav");
     startSound = LoadSound("start.wav");
+
+    current = 0;
 }
 
 void playRandomSound()
 {
-    int n;
+    int n = GetRandomValue(0, 2);
 
     while (n == current)
     {

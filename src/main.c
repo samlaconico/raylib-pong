@@ -12,7 +12,7 @@ int main()
 	InitWindow(GAME_WIDTH, GAME_HEIGHT, "New PONG");
 	InitAudioDevice();
 
-	bool *exitGame = false;
+	bool exitGame = false;
 	SearchAndSetResourceDir("resources");
 
 	Shader shader = LoadShader(0, "fisheye.fs");
